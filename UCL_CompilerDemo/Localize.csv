@@ -1,0 +1,5 @@
+NameSpace,UCL_AutoGen,,,,,,,,,,
+ClassName,AutoGenClass,,,,,,,,,,
+ClassModifier,Static,,,,,,,,,,
+AccessModifier,Public,,,,,,,,,,
+Field,m_TestField,ClassModifier,Static,AccessModifier,Public,Type,string,Value,AutoGenValue,Summary,測試自動生成
