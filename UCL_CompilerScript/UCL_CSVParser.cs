@@ -58,11 +58,21 @@ namespace UCL.CompilerLib {
             m_CSVData = new CSVData(m_TextData);
             Debug.LogWarning("m_CSVData:" + m_TextData);
         }
+        public CSVData GetCSVData() {
+            return m_CSVData;
+        }
+        public ClassData CreateClassData() {
+            return new ClassData(m_CSVData);
+        }
+        public void SaveClassToFile(ClassData iClassData) {
+            File.WriteAllText(SaveFilePath + ".cs", iClassData.ConvertToString());
+        }
         [UCL.Core.ATTR.UCL_FunctionButton]
         public void WriteToClass() {
-            ClassData aClassData = new ClassData(m_CSVData);
+            ClassData aClassData = CreateClassData();
             Debug.LogError(aClassData.UCL_ToString());
-            File.WriteAllText(SaveFilePath + ".cs", aClassData.ConvertToString());
+            SaveClassToFile(aClassData);
+            //File.WriteAllText(SaveFilePath + ".cs", aClassData.ConvertToString());
         }
     }
 }

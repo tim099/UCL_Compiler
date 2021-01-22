@@ -54,47 +54,57 @@ namespace UCL.CompilerLib {
     public class ClassFieldData {
         public AccessModifier m_AccessModifier = AccessModifier.Public;
         public ClassModifierSet m_ModifierSet = new ClassModifierSet();
-        public string m_FieldName = string.Empty;
+        public string m_Name = string.Empty;
         public System.Type m_Type = typeof(object);
         public string m_TypeName = string.Empty;
         public HashSet<string> m_Summarys = new HashSet<string>();
         public object m_Value = null;
-
+        public ClassFieldData() { }
         public ClassFieldData(CSVRowData iColumeData) {
-            m_FieldName = iColumeData.Get(1);
-            ParseFieldData(2, iColumeData);
+            Init(iColumeData.m_Columes);
+        }
+        public ClassFieldData(string iName) {
+            m_Name = iName;
+        }
+        public void Init(List<string> iFieldDatas) {
+            if(iFieldDatas == null || iFieldDatas.Count == 0) return;
+            m_Name = iFieldDatas.Get(1);
+            ParseFieldData(2, iFieldDatas);
         }
         public void AddSummary(string iSummary) {
             if(string.IsNullOrEmpty(iSummary) || m_Summarys.Contains(iSummary)) return;
             m_Summarys.Add(iSummary);
         }
-        public void ParseFieldData(int at, CSVRowData iColumeData) {
-            string aTitle = iColumeData.Get(at++);
+        public void AddModifier(ClassModifier iModifier) {
+            m_ModifierSet.AddModifier(iModifier);
+        }
+        public void ParseFieldData(int at, List<string> iFieldDatas) {
+            string aTitle = iFieldDatas.Get(at++);
             switch(aTitle.ToLower()) {
                 case "type": {
-                        SetType(iColumeData.Get(at++));
+                        SetType(iFieldDatas.Get(at++));
                         break;
                     }
                 case "accessmodifier": {
-                        m_AccessModifier = iColumeData.Get(at++).ToAccessModifier();
+                        m_AccessModifier = iFieldDatas.Get(at++).ToAccessModifier();
                         break;
                     }
                 case "classmodifier": {
-                        m_ModifierSet.AddModifier(iColumeData.Get(at++));
+                        m_ModifierSet.AddModifier(iFieldDatas.Get(at++));
                         break;
                     }
                 case "value": {
-                        SetValue(iColumeData.Get(at++));
+                        SetValue(iFieldDatas.Get(at++));
                         break;
                     }
                 case "summary": {
-                        AddSummary(iColumeData.Get(at++));
+                        AddSummary(iFieldDatas.Get(at++));
                         break;
                     }
                     
             }
-            if(at < iColumeData.Count) {
-                ParseFieldData(at, iColumeData);
+            if(at < iFieldDatas.Count) {
+                ParseFieldData(at, iFieldDatas);
             }
         }
         public void SetValue(string iValue) {
@@ -134,7 +144,7 @@ namespace UCL.CompilerLib {
             iStringBuilder.Append(aLayerStr + m_AccessModifier.ParseToString() + " ");
             if(m_ModifierSet.Count > 0) iStringBuilder.Append(m_ModifierSet.ParseToString() + " ");
             iStringBuilder.Append(m_TypeName + " ");
-            iStringBuilder.Append(m_FieldName + " = ");
+            iStringBuilder.Append(m_Name + " = ");
             if(m_TypeName == "string") {
                 iStringBuilder.Append("\"" + m_Value + "\"");
             } else {
@@ -143,10 +153,145 @@ namespace UCL.CompilerLib {
             iStringBuilder.Append(";" + System.Environment.NewLine);
         }
     }
+    public class ClassMethodParameter {
+        public string m_Name = string.Empty;
+        public string m_Type = string.Empty;
+        public string m_Summary = string.Empty;
+        public ClassMethodParameter(string iType, string iName) {
+            m_Type = iType;
+            m_Name = iName;
+        }
+        public void ConvertToString(StringBuilder iStringBuilder) {
+            iStringBuilder.Append(m_Type);
+            iStringBuilder.Append(' ');
+            iStringBuilder.Append(m_Name);
+        }
+        public void WriteSummary(StringBuilder iStringBuilder, string iLayerStr) {
+            if(string.IsNullOrEmpty(m_Summary)) return;
+            iStringBuilder.Append(iLayerStr);
+            iStringBuilder.Append("/// <param name=\"");
+            iStringBuilder.Append(m_Name);
+            iStringBuilder.AppendLine("\">" + m_Summary + "</param>");
+        }
+    }
+    public class ClassMethodStatement {
+        public ClassMethodStatement() { }
+        public ClassMethodStatement(string aStatement) {
+            m_Statement = aStatement;
+        }
+        public void ConvertToString(StringBuilder iStringBuilder, string aLayerStr) {
+            iStringBuilder.Append(aLayerStr);
+            iStringBuilder.AppendLine(m_Statement);
+        }
+        public string m_Statement = string.Empty;
+    }
+    public class ClassMethodData {
+        public AccessModifier m_AccessModifier = AccessModifier.Public;
+        public ClassModifierSet m_ModifierSet = new ClassModifierSet();
+        public List<ClassMethodParameter> m_Parameters = new List<ClassMethodParameter>();
+        public List<ClassMethodStatement> m_Statements = new List<ClassMethodStatement>();
+        public HashSet<string> m_Summarys = new HashSet<string>();
+        public string m_ReturnType = "void";
+        public string m_Name = string.Empty;
+        public ClassMethodData() { }
+        public ClassMethodData(string iName) {
+            SetMethodName(iName);
+        }
+        public void AddSummary(string iSummary) {
+            if(string.IsNullOrEmpty(iSummary) || m_Summarys.Contains(iSummary)) return;
+            m_Summarys.Add(iSummary);
+        }
+        public void AddModifier(ClassModifier iModifier) {
+            m_ModifierSet.AddModifier(iModifier);
+        }
+        public ClassMethodParameter AddParameter(string iType, string iName) {
+            ClassMethodParameter aClassMethodParameter = new ClassMethodParameter(iType, iName);
+            m_Parameters.Add(aClassMethodParameter);
+            return aClassMethodParameter;
+        }
+        public ClassMethodStatement AddStatement() {
+            ClassMethodStatement aClassMethodStatement = new ClassMethodStatement();
+            m_Statements.Add(aClassMethodStatement);
+            return aClassMethodStatement;
+        }
+        public ClassMethodStatement AddStatement(string iStatement) {
+            ClassMethodStatement aClassMethodStatement = new ClassMethodStatement(iStatement);
+            m_Statements.Add(aClassMethodStatement);
+            return aClassMethodStatement;
+        }
+        public void SetReturnType(string iReturnType) {
+            m_ReturnType = iReturnType;
+        }
+        public void ParseMethodData(int at, CSVRowData iColumeData) {
+            string aTitle = iColumeData.Get(at++);
+            switch(aTitle.ToLower()) {
+                case "accessmodifier": {
+                        m_AccessModifier = iColumeData.Get(at++).ToAccessModifier();
+                        break;
+                    }
+                case "classmodifier": {
+                        m_ModifierSet.AddModifier(iColumeData.Get(at++));
+                        break;
+                    }
+                case "returntype": {
+                        m_ReturnType = iColumeData.Get(at++);
+                        break;
+                    }
+            }
+            if(at < iColumeData.Count) {
+                ParseMethodData(at, iColumeData);
+            }
+        }
+        public void SetMethodName(string iName) {
+            m_Name = iName;
+        }
+        public void ConvertToString(StringBuilder iStringBuilder, string aLayerStr) {
+            if(m_Summarys.Count > 0) {
+                iStringBuilder.AppendLine(aLayerStr + "/// <summary>");
+                foreach(var aSummary in m_Summarys) {
+                    var aLines = aSummary.SplitByLine();
+                    foreach(var aLine in aLines) {
+                        iStringBuilder.Append(aLayerStr + "/// ");
+                        iStringBuilder.AppendLine(aLine);
+                    }
+                }
+                iStringBuilder.AppendLine(aLayerStr + "/// </summary>");
+            }
+            foreach(var aParam in m_Parameters) {
+                aParam.WriteSummary(iStringBuilder, aLayerStr);
+            }
+            iStringBuilder.Append(aLayerStr + m_AccessModifier.ParseToString() + " ");
+            if(m_ModifierSet.Count > 0) iStringBuilder.Append(m_ModifierSet.ParseToString() + " ");
+            iStringBuilder.Append(m_ReturnType + " ");
+            iStringBuilder.Append(m_Name + "(");
+            int at = 0;
+            foreach(var aParam in m_Parameters) {
+                if(at > 0) {
+                    iStringBuilder.Append(", ");
+                    if(at % 4 == 0) {
+                        iStringBuilder.AppendLine();
+                        iStringBuilder.Append(aLayerStr + '\t');
+                    }
+                }
+                ++at;
+                aParam.ConvertToString(iStringBuilder);
+            }
+            iStringBuilder.Append(") {");
+            iStringBuilder.AppendLine();
+            string aStatementLayerStr = aLayerStr + '\t';
+            foreach(var aStatement in m_Statements) {
+                aStatement.ConvertToString(iStringBuilder, aStatementLayerStr);
+            }
+            
+            iStringBuilder.AppendLine(aLayerStr + "}");
+
+        }
+    }
     public class ClassData {
         public AccessModifier m_AccessModifier = AccessModifier.Public;
         public ClassModifierSet m_ModifierSet = new ClassModifierSet();
         public Dictionary<string, ClassFieldData> m_ClassFieldDatas = new Dictionary<string, ClassFieldData>();
+        public Dictionary<string, ClassMethodData> m_ClassMethodDatas = new Dictionary<string, ClassMethodData>();
         public string m_NameSpace = string.Empty;
         public string m_ClassName = string.Empty;
 
@@ -156,19 +301,49 @@ namespace UCL.CompilerLib {
                 ParseCSVColume(csv_data.GetRow(i));
             }
         }
-        #region Add
+        #region Get & Set
+        public void SetName(string iName) {
+            m_ClassName = iName;
+        }
+        public void SetNameSpace(string iNameSpace) {
+            m_NameSpace = iNameSpace;
+        }
+        #endregion
+        #region Add & Create
+        public void AddModifier(string iModifier) {
+            m_ModifierSet.AddModifier(iModifier);
+        }
+        public void AddModifier(ClassModifier iModifier) {
+            m_ModifierSet.AddModifier(iModifier);
+        }
+        virtual public ClassMethodData CreateClassMethodData(string iName) {
+            ClassMethodData aClassFieldData = new ClassMethodData(iName);
+            AddClassMethodData(aClassFieldData);
+            return aClassFieldData;
+        }
+        virtual public void AddClassMethodData(ClassMethodData iClassMethodData) {
+            if(m_ClassMethodDatas.ContainsKey(iClassMethodData.m_Name)) {//Field with same name already exist!!              
+                Debug.LogWarning("AddClassMethodData Name:" + iClassMethodData.m_Name + ",already exist!!");
+            } else {
+                m_ClassMethodDatas.Add(iClassMethodData.m_Name, iClassMethodData);
+            }
+        }
+        virtual public ClassFieldData CreateFieldData(string iName) {
+            ClassFieldData aClassFieldData = new ClassFieldData(iName);
+            AddFieldData(aClassFieldData);
+            return aClassFieldData;
+        }
         virtual public void AddFieldData(ClassFieldData iClassFieldData) {
-            if(m_ClassFieldDatas.ContainsKey(iClassFieldData.m_FieldName)) {                
-                if(iClassFieldData.m_Summarys.Count > 0) {
-                    var aField = m_ClassFieldDatas[iClassFieldData.m_FieldName];
+            if(m_ClassFieldDatas.ContainsKey(iClassFieldData.m_Name)) {//Field with same name already exist!!              
+                if(iClassFieldData.m_Summarys.Count > 0) {//Combine summarys
+                    var aField = m_ClassFieldDatas[iClassFieldData.m_Name];
                     foreach(var aSummary in iClassFieldData.m_Summarys) {
                         aField.AddSummary(aSummary);
                     }
                 }
-                
-                Debug.LogWarning("AddFieldData FieldName:" + iClassFieldData.m_FieldName + ",already exist!!");
+                Debug.LogWarning("AddFieldData FieldName:" + iClassFieldData.m_Name + ",already exist!!");
             } else {
-                m_ClassFieldDatas.Add(iClassFieldData.m_FieldName, iClassFieldData);
+                m_ClassFieldDatas.Add(iClassFieldData.m_Name, iClassFieldData);
             }
         }
         #endregion
@@ -192,10 +367,12 @@ namespace UCL.CompilerLib {
             m_ConvertStack.Push(aLayerStr + "}" + System.Environment.NewLine);
             aLayerStr = new string('\t', ++aLayer);
             //string aFieldLayerStr = aLayerStr + '\t';
-            foreach(var aFieldName in m_ClassFieldDatas.Keys) {
-                m_ClassFieldDatas[aFieldName].ConvertToString(aStringBuilder, aLayerStr);
+            foreach(var aName in m_ClassFieldDatas.Keys) {
+                m_ClassFieldDatas[aName].ConvertToString(aStringBuilder, aLayerStr);
             }
-
+            foreach(var aName in m_ClassMethodDatas.Keys) {
+                m_ClassMethodDatas[aName].ConvertToString(aStringBuilder, aLayerStr);
+            }
             while(m_ConvertStack.Count > 0) {
                 aStringBuilder.Append(m_ConvertStack.Pop());
             }
@@ -210,13 +387,14 @@ namespace UCL.CompilerLib {
                         m_NameSpace = iColumeData.Get(1);
                         break;
                     }
+                case "name":
                 case "classname": {
-                        m_ClassName = iColumeData.Get(1);
+                        SetName(iColumeData.Get(1));
                         break;
                     }
                 case "classmodifier": {
                         for(int i = 1, count = iColumeData.Count; i < count; i++) {
-                            m_ModifierSet.AddModifier(iColumeData.Get(i));
+                            AddModifier(iColumeData.Get(i));
                         }
                         break;
                     }

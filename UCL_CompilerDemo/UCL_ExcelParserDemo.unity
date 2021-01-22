@@ -244,7 +244,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_TextData: "NameSpace,UCL_AutoGen,,,,,,,,,,\r\nClassName,AutoGenClass,,,,,,,,,,\r\nClassModifier,Static,,,,,,,,,,\r\nAccessModifier,Public,,,,,,,,,,\r\nField,m_TestField,ClassModifier,Static,AccessModifier,Public,Type,string,Value,AutoGenValue,Summary,\u6E2C\u8A66\u81EA\u52D5\u751F\u6210\r\n"
   m_FolderPath: Assets/UCL/UCL_Modules/UCL_Compiler/UCL_CompilerDemo
-  m_FileName: Localize.csv
+  m_FileName: AutoGenClassTemp.csv
   m_SaveName: AutoGenClass
   m_Encoding: big5
   m_CSVData:

@@ -11,15 +11,15 @@ namespace UCL.CompilerLib {
                 return m_Columes.Count;
             }
         }
-        public CSVRowData(string data) {
-            var columes = data.Split(new[] { ',' });//, System.StringSplitOptions.RemoveEmptyEntries
+        public CSVRowData(string iData) {
+            var columes = iData.Split(new[] { ',' });//, System.StringSplitOptions.RemoveEmptyEntries
             for(int i = 0; i < columes.Length; i++) {
                 m_Columes.Add(columes[i]);
             }
         }
-        public string Get(int colume) {
-            if(colume < 0 || colume >= m_Columes.Count) return string.Empty;
-            return m_Columes[colume];
+        public string Get(int iColume) {
+            if(iColume < 0 || iColume >= m_Columes.Count) return string.Empty;
+            return m_Columes[iColume];
         }
         public List<string> m_Columes = new List<string>();
     }
