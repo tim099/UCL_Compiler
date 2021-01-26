@@ -114,7 +114,7 @@ namespace UCL.CompilerLib.Test {
                     aField.SetValue(aData);
                     aEventClassData.AddFieldData(aField);
                 }
-                File.WriteAllText(m_FolderPath + "/FireBase" + aParam + ".cs", aEventClassData.ConvertToString());
+                File.WriteAllText(m_FolderPath + "/Firebase" + aParam + ".cs", aEventClassData.ConvertToString());
             }
             for(int aParseColume = 2; aParseColume < 5; aParseColume++) {
                 var aParam = aParams[aParseColume - 1];
@@ -148,10 +148,10 @@ namespace UCL.CompilerLib.Test {
                     }
 
                 }
-                File.WriteAllText(m_FolderPath + "/FireBase" + aParam + ".cs", aEventClassData.ConvertToString());
+                File.WriteAllText(m_FolderPath + "/Firebase" + aParam + ".cs", aEventClassData.ConvertToString());
             }
 
-            File.WriteAllText(m_FolderPath + "/FireBaseEventTrigger.cs", aClassData.ConvertToString());
+            File.WriteAllText(m_FolderPath + "/FirebaseEventTrigger.cs", aClassData.ConvertToString());
         }
         public void Event1234() {
 
