@@ -146,9 +146,18 @@ namespace UCL.CompilerLib {
             iStringBuilder.Append(m_TypeName + " ");
             iStringBuilder.Append(m_Name + " = ");
             if(m_TypeName == "string") {
-                iStringBuilder.Append("\"" + m_Value + "\"");
+                if(m_Value == null) {
+                    iStringBuilder.Append("string.Empty");
+                } else {
+                    iStringBuilder.Append("\"" + m_Value + "\"");
+                }
+                
             } else {
-                iStringBuilder.Append(m_Value.ToString());
+                if(m_Value == null) {
+                    iStringBuilder.Append("null");
+                } else {
+                    iStringBuilder.Append(m_Value.ToString());
+                }
             }
             iStringBuilder.Append(";" + System.Environment.NewLine);
         }
