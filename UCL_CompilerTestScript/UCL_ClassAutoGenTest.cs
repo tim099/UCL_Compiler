@@ -7,11 +7,13 @@ namespace UCL.CompilerLib.Test {
     public class UCL_ClassAutoGenTest : MonoBehaviour {
         public string m_FolderPath = string.Empty;
         public string m_NameSpace = string.Empty;
-        public UCL_CSVParser m_ClassParser;
-        public UCL_CSVParser m_DataParser;
-        public UCL_CSVParser m_EventNameParser;
+        public UCL_CSVParser m_ClassParser = null;
+        public UCL_CSVParser m_DataParser = null;
+        public UCL_CSVParser m_EventNameParser = null;
+        public UCL_ScriptRefactor m_ScriptRefactor = null;
         [UCL.Core.ATTR.UCL_FunctionButton]
         public void Generate() {
+            m_ScriptRefactor.m_StringReplacement.Clear();
             string[] aParams = new string[] {
                     "EventName",
                     "EventLabel",
@@ -48,7 +50,25 @@ namespace UCL.CompilerLib.Test {
             {
                 for(int i = 0, count = aCSVData.Count; i < count; i++) {
                     var aRow = aCSVData.GetRow(i);
-                    var method = aClassData.CreateClassMethodData("FirebaseEvent"+(i+1));
+                    var aPrevName = "FirebaseEvent" + (i + 1);
+                    var aFuncName = aRow.Get(2);
+                    {
+                        if(string.IsNullOrEmpty(aFuncName) || aFuncName.Contains("(")) {
+                            aFuncName = aRow.Get(0);
+                        }
+                        var aNames = aFuncName.Split(new char[] { '_' }, System.StringSplitOptions.RemoveEmptyEntries);
+                        var aSb = new System.Text.StringBuilder();
+                        for(int j = 0; j < aNames.Length; j++) {
+                            var aName = aNames[j];
+                            if(aName.Length > 0) {
+                                aSb.Append(char.ToUpper(aName[0]));
+                                aSb.Append(aName.Substring(1, aName.Length - 1));
+                            }
+                        }
+                        aFuncName = aSb.ToString() + (i + 1);
+                    }
+                    m_ScriptRefactor.m_StringReplacement.Add(new UCL_ScriptRefactor.ReplaceData(aPrevName+"(", aFuncName+"("));
+                    var method = aClassData.CreateClassMethodData(aFuncName);
                     method.AddModifier(ClassModifier.Static);
                     method.AddSummary(aRow.Get(1));
                     method.SetReturnType("void");
