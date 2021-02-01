@@ -128,7 +128,7 @@ namespace UCL.CompilerLib.Test {
                     var aData = aRow.Get(aParseColume);
                     if(string.IsNullOrEmpty(aData)) continue;
                     var aField = new ClassFieldData(aData);
-                    aField.AddModifier(ClassModifier.Static);
+                    aField.AddModifier(ClassModifier.Const);
                     aField.AddSummary(aRow.Get(1));
                     aField.SetType("string");
                     aField.SetValue(aData);
@@ -152,7 +152,7 @@ namespace UCL.CompilerLib.Test {
                         for(int j = 1; j < aDatas.Length; j++) {
                             aData = aDatas[j];
                             var aField = new ClassFieldData(aData);
-                            aField.AddModifier(ClassModifier.Static);
+                            aField.AddModifier(ClassModifier.Const);
                             if(aParseColume != 3) aField.AddSummary(aRow.Get(1));
                             aField.SetType("string");
                             aField.SetValue(aData);
@@ -160,7 +160,7 @@ namespace UCL.CompilerLib.Test {
                         }
                     } else {
                         var aField = new ClassFieldData(aData);
-                        aField.AddModifier(ClassModifier.Static);
+                        aField.AddModifier(ClassModifier.Const);
                         if(aParseColume != 3) aField.AddSummary(aRow.Get(1));
                         aField.SetType("string");
                         aField.SetValue(aData);

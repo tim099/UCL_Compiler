@@ -26,7 +26,7 @@ namespace UCL.CompilerLib.Test {
                     var aData = aRow.Get(aCol);
                     if(string.IsNullOrEmpty(aData)) continue;
                     var aField = new ClassFieldData(aData);
-                    aField.AddModifier(ClassModifier.Static);
+                    aField.AddModifier(ClassModifier.Const);
                     aField.AddSummary(aRow.Get(2));
                     aField.SetType("string");
                     aField.SetValue((object)aData);
