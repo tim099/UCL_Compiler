@@ -105,6 +105,123 @@ namespace UCL.CompilerLib
             }
             File.WriteAllText(iPath, aData.ToCSV());
         }
+        UnityEngine.Object CheckReplace(UnityEngine.Object iData, System.Type iType)
+        {
+            if (iData == null) return null;
+            string aGUID;
+            long aFile;
+
+            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(iData, out aGUID, out aFile))
+            {
+                if (m_ReplaceDic.ContainsKey(aGUID))
+                {
+                    if (iData is Sprite)
+                    {
+                        Sprite aSprite = iData as Sprite;
+                        string aSpriteName = aSprite.name;
+                        Object[] aNewSprites = AssetDatabase.LoadAllAssetsAtPath(m_ReplaceDic[aGUID]);
+                        //Debug.LogError("aSprite.name:" + aSprite.name+ ",aNewSprites:"+ aNewSprites.UCL_ToString());
+                        if (aNewSprites.Length > 0)
+                        {
+                            Sprite aNewSprite = null;
+                            bool aFind = false;
+                            for (int i = 0; i < aNewSprites.Length && !aFind; i++)
+                            {
+                                var aTmpSprite = aNewSprites[i] as Sprite;
+                                if (aTmpSprite != null)
+                                {
+                                    aNewSprite = aTmpSprite;
+                                    if (aNewSprite.name == aSpriteName)
+                                    {
+                                        aFind = true;
+                                    }
+                                }
+                            }
+                            return aNewSprite;
+                        }
+
+                    }
+                    else
+                    {
+                        var aAsset = AssetDatabase.LoadAssetAtPath(m_ReplaceDic[aGUID], iType);
+                        return aAsset;
+                    }
+                }
+            }
+            return null;
+        }
+        object ReplaceOnObject(object iObject)
+        {
+            bool aIsModified = false;
+            if (iObject is IList)
+            {
+                IList aList = iObject as IList;
+                //Debug.LogWarning("Replace List!!");
+                for (int i = 0; i < aList.Count; i++)
+                {
+                    var aObj = aList[i];
+                    object aResultObj = null;
+                    if (aObj is UnityEngine.Object)
+                    {
+                        aResultObj = CheckReplace(aObj as UnityEngine.Object, iObject.GetType());
+                    }
+                    else
+                    {
+                        aResultObj = ReplaceOnObject(aObj);
+                    }
+                    if (aResultObj != null)
+                    {
+                        aIsModified = true;
+                        aList[i] = aResultObj;
+                    }
+                }
+                if(aIsModified) return aList;
+                return null;
+            }
+            var aType = iObject.GetType();
+            var aFields = aType.GetAllFieldsUntil(typeof(Component), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (var aField in aFields)
+            {
+                object aObj = aField.GetValue(iObject);
+                if (aObj == null) continue;
+                //var aFieldType = aField.FieldType;
+                var aData = aObj as UnityEngine.Object;
+
+                if (aData != null)
+                {
+                    UnityEngine.Object aResult = CheckReplace(aData, aField.FieldType);
+                    if (aResult != null)
+                    {
+                        aIsModified = true;
+                        //Debug.LogWarning("aResult:" + aResult.name);
+                        aField.SetValue(iObject, aResult);
+                    }
+
+                }
+                else if(aObj is IList)
+                {
+                    object aResult = ReplaceOnObject(aObj);
+                    if (aResult != null)
+                    {
+                        aField.SetValue(iObject, aResult);
+                        aIsModified = true;
+                    }
+                }
+                else if (aField.FieldType.IsStructOrClass())
+                {
+                    object aResult = ReplaceOnObject(aObj);
+                    if (aResult != null)
+                    {
+                        //Debug.LogWarning("Replace struct:" + aField.Name);
+                        aField.SetValue(iObject, aResult);
+                        aIsModified = true;
+                    }
+                }
+            }
+            if (aIsModified) return iObject;
+
+            return null;
+        }
         bool ReplaceOnGameObject(GameObject iGameObj)
         {
             if (iGameObj == null) return false;
@@ -115,60 +232,9 @@ namespace UCL.CompilerLib
             var aComponents = iGameObj.GetComponents<Component>();
             foreach (var aComponent in aComponents)
             {
-                var aType = aComponent.GetType();
-
-                var aFields = aType.GetAllFieldsUntil(typeof(Component), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                foreach (var aField in aFields)
+                if (ReplaceOnObject(aComponent) != null)
                 {
-                    //var aFieldType = aField.FieldType;
-                    var aData = aField.GetValue(aComponent) as UnityEngine.Object;
-
-                    if (aData != null)
-                    {
-                        string aGUID;
-                        long aFile;
-
-                        if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(aData, out aGUID, out aFile))
-                        {
-                            //int aID = aData.GetInstanceID();
-                            //Debug.LogWarning("Find aData:" + aGUID);
-                            if (m_ReplaceDic.ContainsKey(aGUID))
-                            {
-                                aIsModified = true;
-                                
-                                if (aData is Sprite)
-                                {
-                                    Sprite aSprite = aData as Sprite;
-                                    Object[] aNewSprites = AssetDatabase.LoadAllAssetsAtPath(m_ReplaceDic[aGUID]);
-                                    //Debug.LogError("aSprite.name:" + aSprite.name+ ",aNewSprites:"+ aNewSprites.UCL_ToString());
-                                    if (aNewSprites.Length > 0)
-                                    {
-                                        Sprite aNewSprite = null;
-                                        for (int i = 0; i < aNewSprites.Length; i++)
-                                        {
-                                            aNewSprite = aNewSprites[i] as Sprite;
-                                            if (aNewSprite != null && aNewSprite.name == aSprite.name)
-                                            {
-                                                break;
-                                            }
-                                        }
-                                        if (aNewSprite != null)
-                                        {
-                                            aField.SetValue(aComponent, aNewSprite);
-                                        }
-                                    }
-                                    
-                                }
-                                else
-                                {
-                                    var aAsset = AssetDatabase.LoadAssetAtPath(m_ReplaceDic[aGUID], aField.FieldType);
-                                    aField.SetValue(aComponent, aAsset);
-                                }
-                                //Debug.LogWarning("Replace aData:" + aData.name + "," + m_ReplaceDic[aGUID]);
-                            }
-                        }
-
-                    }
+                    aIsModified = true;
                 }
             }
             foreach (Transform aTran in iGameObj.transform)
@@ -183,41 +249,75 @@ namespace UCL.CompilerLib
         }
         virtual public void Replace()
         {
+            int aTotalCount = 0;
+            int aFinishedCount = 0;
             bool aIsUpdated = false;
             int aLen = Application.dataPath.Length - 6;
-            var aFilesPath = Directory.GetFiles(Path.Combine(Application.dataPath, m_ReplaceRoot), "*.prefab", SearchOption.AllDirectories);
-            int aTotalCount = aFilesPath.Length;
-            int aFinishedCount = 0;
-            foreach (var aPrefabPath in aFilesPath)
+            var aPrefabsPath = Directory.GetFiles(Path.Combine(Application.dataPath, m_ReplaceRoot), "*.prefab", SearchOption.AllDirectories);
+            aTotalCount += aPrefabsPath.Length;
+            var aScriptableObjectsPath = Directory.GetFiles(Path.Combine(Application.dataPath, m_ReplaceRoot), "*.asset", SearchOption.AllDirectories);
+            aTotalCount += aScriptableObjectsPath.Length;
             {
-                try
+                foreach (var aPrefabPath in aPrefabsPath)
                 {
-                    float aProgress = ++aFinishedCount / (float)aTotalCount;
-                    string aPath = aPrefabPath.Substring(aLen);
-                    UnityEditor.EditorUtility.DisplayProgressBar("AssetReplace", aPath, aProgress);
-                    //Debug.LogWarning("aPath:" + aPath);
-                    var aPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(aPath);
-                    if (aPrefab != null)
+                    try
                     {
-                        if (ReplaceOnGameObject(aPrefab))
+                        float aProgress = ++aFinishedCount / (float)aTotalCount;
+                        string aPath = aPrefabPath.Substring(aLen);
+                        UnityEditor.EditorUtility.DisplayProgressBar("AssetReplace", aPath, aProgress);
+                        //Debug.LogWarning("aPath:" + aPath);
+                        var aPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(aPath);
+                        if (aPrefab != null)
                         {
-                            aIsUpdated = true;
-                            //Debug.LogWarning("Save Prefab!!");
-                            EditorUtility.SetDirty(aPrefab);
+                            if (ReplaceOnGameObject(aPrefab))
+                            {
+                                aIsUpdated = true;
+                                //Debug.LogWarning("Save Prefab!!");
+                                EditorUtility.SetDirty(aPrefab);
+                            }
+
+                            //Debug.LogWarning("aComponents:" + aComponents.UCL_ToString());
                         }
 
-                        //Debug.LogWarning("aComponents:" + aComponents.UCL_ToString());
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError(e);
                     }
 
                 }
-                catch(System.Exception e)
-                {
-                    Debug.LogError(e);
-                }
-
             }
-            UnityEditor.EditorUtility.ClearProgressBar();
+            {
+
+                foreach (var aScriptableObjectPath in aScriptableObjectsPath)
+                {
+                    try
+                    {
+                        float aProgress = ++aFinishedCount / (float)aTotalCount;
+                        string aPath = aScriptableObjectPath.Substring(aLen);
+                        UnityEditor.EditorUtility.DisplayProgressBar("AssetReplace", aPath, aProgress);
+                        var aScriptableObject = AssetDatabase.LoadAssetAtPath<ScriptableObject>(aPath);
+                        if (aScriptableObject != null)
+                        {
+                            if (ReplaceOnObject(aScriptableObject) != null)
+                            {
+                                aIsUpdated = true;
+                                EditorUtility.SetDirty(aScriptableObject);
+                            }
+                        }
+
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError(e);
+                    }
+
+                }
+            }
+
+
             if (aIsUpdated) AssetDatabase.SaveAssets();
+            UnityEditor.EditorUtility.ClearProgressBar();
             //Debug.LogWarning("aFilesPath:" + aFilesPath.UCL_ToString());
         }
         virtual public void ReplaceAssets()

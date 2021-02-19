@@ -45,6 +45,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Sprite: {fileID: 21300000, guid: 0a7c8bcb145783b499db2f7d5a7f9786, type: 3}
   m_Clip: {fileID: 0}
+  m_Sprites: []
+  m_SpriteArray: []
+  m_TestData:
+    m_Sprite2: {fileID: 0}
+    m_TestData2:
+      m_Clip2: {fileID: 0}
+  m_TestData2:
+    m_Clip2: {fileID: 0}
 --- !u!1 &7582069609527933241
 GameObject:
   m_ObjectHideFlags: 0
@@ -92,6 +100,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Sprite: {fileID: 21300000, guid: 0a7c8bcb145783b499db2f7d5a7f9786, type: 3}
   m_Clip: {fileID: 8300000, guid: 4b83dfef24de11f4ab7b49e6ddb3c12a, type: 3}
+  m_Sprites:
+  - {fileID: 21300000, guid: 0a7c8bcb145783b499db2f7d5a7f9786, type: 3}
+  - {fileID: -387359475172810526, guid: 7a181fa61dd76ea46be498e4578bacf1, type: 3}
+  m_SpriteArray:
+  - {fileID: 21300000, guid: 0a7c8bcb145783b499db2f7d5a7f9786, type: 3}
+  - {fileID: 4107937562457527012, guid: 7a181fa61dd76ea46be498e4578bacf1, type: 3}
+  m_TestData:
+    m_Sprite2: {fileID: 21300000, guid: 0a7c8bcb145783b499db2f7d5a7f9786, type: 3}
+    m_TestData2:
+      m_Clip2: {fileID: 8300000, guid: 4b83dfef24de11f4ab7b49e6ddb3c12a, type: 3}
+  m_TestData2:
+    m_Clip2: {fileID: 8300000, guid: 4b83dfef24de11f4ab7b49e6ddb3c12a, type: 3}
 --- !u!1001 &3578582358172396619
 PrefabInstance:
   m_ObjectHideFlags: 0
