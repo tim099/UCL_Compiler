@@ -19,11 +19,13 @@ namespace UCL.CompilerLib
         public static void ShowWindow()
         {
             Instance = EditorWindow.GetWindow<UCL_AssetReplaceWindow>("AssetReplaceWindow");
+            Instance.Show();
             Instance.Init(new AssetReplaceData());
         }
         public static void ShowWindow(UCL_AssetReplace iAssetReplace)
         {
             Instance = EditorWindow.GetWindow<UCL_AssetReplaceWindow>("AssetReplaceWindow");
+            Instance.Show();
             Instance.SetAssetReplace(iAssetReplace);
         }
         virtual public void Init(AssetReplaceData iData)

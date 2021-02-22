@@ -13,6 +13,7 @@ namespace UCL.CompilerLib
     [System.Serializable]
     public class AssetReplaceData
     {
+        const int MaxSearchLayer = 10;
         [System.Serializable]
         public class ReplaceData
         {
@@ -25,6 +26,13 @@ namespace UCL.CompilerLib
             {
                 m_OriginPath = iOriginPath;
                 m_ReplacePath = iReplacePath;
+            }
+            public ReplaceData(string iOriginPath, string iOriginAsset, string iReplacePath, string iReplaceAsset)
+            {
+                m_OriginPath = iOriginPath;
+                m_OriginAsset = iOriginAsset;
+                m_ReplacePath = iReplacePath;
+                m_ReplaceAsset = iReplaceAsset;
             }
             public string OriginPath
             {
@@ -43,10 +51,48 @@ namespace UCL.CompilerLib
             /// Replace asset path
             /// </summary>
             public string m_ReplacePath;
+
+            public string m_OriginAsset;
+            public string m_ReplaceAsset;
+        }
+        public class ReplaceSetting
+        {
+            public ReplaceSetting(string iReplacePath)
+            {
+                m_ReplacePath = iReplacePath;
+            }
+            public void AddReplaceAsset(string iOriginAsset,string iReplaceAsset)
+            {
+                if(m_ReplaceDic == null)
+                {
+                    m_ReplaceDic = new Dictionary<string, string>();
+                }
+                if (m_ReplaceDic.ContainsKey(iOriginAsset))
+                {
+                    return;
+                }
+                m_ReplaceDic.Add(iOriginAsset, iReplaceAsset);
+            }
+            public string GetReplaceAsset(string iOriginAsset)
+            {
+                if (m_ReplaceDic == null)
+                {
+                    return iOriginAsset;
+                }
+                if (!m_ReplaceDic.ContainsKey(iOriginAsset))
+                {
+                    return iOriginAsset;
+                }
+
+                return m_ReplaceDic[iOriginAsset];
+            }
+            public string m_ReplacePath;
+            Dictionary<string, string> m_ReplaceDic = null;
         }
         public List<ReplaceData> m_ReplaceList = new List<ReplaceData>();
         public string m_ReplaceRoot = string.Empty;
-        protected Dictionary<string, string> m_ReplaceDic = new Dictionary<string, string>();
+        protected Dictionary<string, ReplaceSetting> m_ReplaceDic = new Dictionary<string, ReplaceSetting>();
+        protected List<UnityEngine.Object> m_MissingReferenceList = new List<UnityEngine.Object>();
 #if UNITY_EDITOR
         public void LoadReplaceDataFromCSV(string iPath)
         {
@@ -62,7 +108,23 @@ namespace UCL.CompilerLib
                 var aRow = aData.GetRow(i);
                 if (aRow.Count >= 2)
                 {
-                    m_ReplaceList.Add(new ReplaceData(aRow.Get(0), aRow.Get(1)));
+                    if (aRow.Count >= 4)
+                    {
+                        string aOriginAsset = aRow.Get(1); 
+                        string aReplaceAsset = aRow.Get(3);
+                        if(!string.IsNullOrEmpty(aOriginAsset) && !string.IsNullOrEmpty(aReplaceAsset))
+                        {
+                            m_ReplaceList.Add(new ReplaceData(aRow.Get(0), aOriginAsset, aRow.Get(2), aReplaceAsset));
+                        }
+                        else
+                        {
+                            m_ReplaceList.Add(new ReplaceData(aRow.Get(0), aRow.Get(1)));
+                        }             
+                    }
+                    else
+                    {
+                        m_ReplaceList.Add(new ReplaceData(aRow.Get(0), aRow.Get(1)));
+                    }
                 }
             }
         }
@@ -74,10 +136,22 @@ namespace UCL.CompilerLib
                 foreach(var aReplace in m_ReplaceList)
                 {
                     string aID = AssetDatabase.AssetPathToGUID(aReplace.OriginPath);//aAsset.GetInstanceID();
+                    ReplaceSetting aReplaceSetting = null;
                     if (!m_ReplaceDic.ContainsKey(aID))
                     {
+                        aReplaceSetting = new ReplaceSetting(aReplace.ReplacePath);
+
                         //Debug.LogWarning("aID:" + aID);
-                        m_ReplaceDic.Add(aID, aReplace.ReplacePath);
+                        m_ReplaceDic.Add(aID, aReplaceSetting);
+                    }
+                    else
+                    {
+                        aReplaceSetting = m_ReplaceDic[aID];
+                    }
+
+                    if (!string.IsNullOrEmpty(aReplace.m_OriginAsset) && !string.IsNullOrEmpty(aReplace.ReplacePath))
+                    {
+                        aReplaceSetting.AddReplaceAsset(aReplace.m_OriginAsset, aReplace.m_ReplaceAsset);
                     }
                 }
             }
@@ -86,10 +160,21 @@ namespace UCL.CompilerLib
                 foreach (var aReplace in m_ReplaceList)
                 {
                     string aID = AssetDatabase.AssetPathToGUID(aReplace.ReplacePath);//aAsset.GetInstanceID();
+                    ReplaceSetting aReplaceSetting = null;
                     if (!m_ReplaceDic.ContainsKey(aID))
                     {
+                        aReplaceSetting = new ReplaceSetting(aReplace.OriginPath);
+
                         //Debug.LogWarning("aID:" + aID);
-                        m_ReplaceDic.Add(aID, aReplace.OriginPath);
+                        m_ReplaceDic.Add(aID, aReplaceSetting);
+                    }
+                    else
+                    {
+                        aReplaceSetting = m_ReplaceDic[aID];
+                    }
+                    if (!string.IsNullOrEmpty(aReplace.m_OriginAsset) && !string.IsNullOrEmpty(aReplace.ReplacePath))
+                    {
+                        aReplaceSetting.AddReplaceAsset(aReplace.m_ReplaceAsset, aReplace.m_OriginAsset);
                     }
                 }
             }
@@ -99,9 +184,21 @@ namespace UCL.CompilerLib
             CSVData aData = new CSVData();
             foreach (var aReplace in m_ReplaceList)
             {
+                bool aIsReplaceAsset = (!string.IsNullOrEmpty(aReplace.m_OriginAsset) || !string.IsNullOrEmpty(aReplace.m_ReplaceAsset));
                 var aRow = aData.AddRow();
-                aRow.AddColume(aReplace.m_OriginPath);
-                aRow.AddColume(aReplace.m_ReplacePath);
+                if (aIsReplaceAsset)
+                {
+                    aRow.AddColume(aReplace.m_OriginPath);
+                    aRow.AddColume(aReplace.m_OriginAsset);
+                    aRow.AddColume(aReplace.m_ReplacePath);
+                    aRow.AddColume(aReplace.m_ReplaceAsset);
+                }
+                else
+                {
+                    aRow.AddColume(aReplace.m_OriginPath);
+                    aRow.AddColume(aReplace.m_ReplacePath);
+                }
+
             }
             File.WriteAllText(iPath, aData.ToCSV());
         }
@@ -110,7 +207,6 @@ namespace UCL.CompilerLib
             if (iData == null) return null;
             string aGUID;
             long aFile;
-
             if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(iData, out aGUID, out aFile))
             {
                 if (m_ReplaceDic.ContainsKey(aGUID))
@@ -118,8 +214,10 @@ namespace UCL.CompilerLib
                     if (iData is Sprite)
                     {
                         Sprite aSprite = iData as Sprite;
-                        string aSpriteName = aSprite.name;
-                        Object[] aNewSprites = AssetDatabase.LoadAllAssetsAtPath(m_ReplaceDic[aGUID]);
+                        var aReplaceSetting = m_ReplaceDic[aGUID];
+                        string aSpriteName = aReplaceSetting.GetReplaceAsset(aSprite.name);
+                        //Debug.LogError("aSprite.name:" + aSprite.name + ",aSpriteName:" + aSpriteName);
+                        Object[] aNewSprites = AssetDatabase.LoadAllAssetsAtPath(aReplaceSetting.m_ReplacePath);
                         //Debug.LogError("aSprite.name:" + aSprite.name+ ",aNewSprites:"+ aNewSprites.UCL_ToString());
                         if (aNewSprites.Length > 0)
                         {
@@ -143,15 +241,23 @@ namespace UCL.CompilerLib
                     }
                     else
                     {
-                        var aAsset = AssetDatabase.LoadAssetAtPath(m_ReplaceDic[aGUID], iType);
+                        var aAsset = AssetDatabase.LoadAssetAtPath(m_ReplaceDic[aGUID].m_ReplacePath, iType);
                         return aAsset;
                     }
                 }
             }
             return null;
         }
-        object ReplaceOnObject(object iObject)
+        object ReplaceOnObject(object iObject, int iLayer)
         {
+            if(iLayer > MaxSearchLayer)
+            {
+                return null;
+            }
+            if (iObject == null)
+            {
+                return null;
+            }
             bool aIsModified = false;
             if (iObject is IList)
             {
@@ -167,7 +273,7 @@ namespace UCL.CompilerLib
                     }
                     else
                     {
-                        aResultObj = ReplaceOnObject(aObj);
+                        aResultObj = ReplaceOnObject(aObj, iLayer+1);
                     }
                     if (aResultObj != null)
                     {
@@ -198,9 +304,13 @@ namespace UCL.CompilerLib
                     }
 
                 }
+                else if(aObj is string)
+                {
+                    //Don't replace string!!
+                }
                 else if(aObj is IList)
                 {
-                    object aResult = ReplaceOnObject(aObj);
+                    object aResult = ReplaceOnObject(aObj, iLayer + 1);
                     if (aResult != null)
                     {
                         aField.SetValue(iObject, aResult);
@@ -209,7 +319,7 @@ namespace UCL.CompilerLib
                 }
                 else if (aField.FieldType.IsStructOrClass())
                 {
-                    object aResult = ReplaceOnObject(aObj);
+                    object aResult = ReplaceOnObject(aObj, iLayer + 1);
                     if (aResult != null)
                     {
                         //Debug.LogWarning("Replace struct:" + aField.Name);
@@ -222,6 +332,46 @@ namespace UCL.CompilerLib
 
             return null;
         }
+        bool CheckMissingReference(UnityEngine.Object iObject)
+        {
+            SerializedObject aSerializedObject = new SerializedObject(iObject);
+            var aIterator = aSerializedObject.GetIterator();
+            while(aIterator.Next(true))
+            {
+                if (aIterator.propertyType == SerializedPropertyType.ObjectReference)
+                {
+                    if (aIterator.objectReferenceValue == null && aIterator.objectReferenceInstanceIDValue != 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        bool CheckMissingReference(GameObject iGameObj) {
+            if (iGameObj == null) return false;
+            PrefabAssetType aAssetType = PrefabUtility.GetPrefabAssetType(iGameObj);
+            var aComponents = iGameObj.GetComponents<Component>();
+            bool aIsMissingReference = false;
+            foreach (var aComponent in aComponents)
+            {
+                if (CheckMissingReference(aComponent))
+                {
+                    aIsMissingReference = true;
+                }
+            }
+            if (aIsMissingReference)
+            {
+                Debug.LogWarning("Find Missing refrence at:" + iGameObj.name);
+                m_MissingReferenceList.Add(iGameObj);
+            }
+            foreach (Transform aTran in iGameObj.transform)
+            {
+                var aObj = aTran.gameObject;
+                CheckMissingReference(aObj);
+            }
+            return aIsMissingReference;
+        }
         bool ReplaceOnGameObject(GameObject iGameObj)
         {
             if (iGameObj == null) return false;
@@ -232,7 +382,7 @@ namespace UCL.CompilerLib
             var aComponents = iGameObj.GetComponents<Component>();
             foreach (var aComponent in aComponents)
             {
-                if (ReplaceOnObject(aComponent) != null)
+                if (ReplaceOnObject(aComponent, 0) != null)
                 {
                     aIsModified = true;
                 }
@@ -247,8 +397,81 @@ namespace UCL.CompilerLib
             }
             return aIsModified;
         }
+        virtual public void FindMissingReference() {
+            m_MissingReferenceList.Clear();
+            int aTotalCount = 0;
+            int aFinishedCount = 0;
+            bool aIsUpdated = false;
+            int aLen = Application.dataPath.Length - 6;
+            var aPrefabsPath = Directory.GetFiles(Path.Combine(Application.dataPath, m_ReplaceRoot), "*.prefab", SearchOption.AllDirectories);
+            aTotalCount += aPrefabsPath.Length;
+            var aScriptableObjectsPath = Directory.GetFiles(Path.Combine(Application.dataPath, m_ReplaceRoot), "*.asset", SearchOption.AllDirectories);
+            aTotalCount += aScriptableObjectsPath.Length;
+            {
+                foreach (var aPrefabPath in aPrefabsPath)
+                {
+                    try
+                    {
+                        float aProgress = ++aFinishedCount / (float)aTotalCount;
+                        string aPath = aPrefabPath.Substring(aLen);
+                        UnityEditor.EditorUtility.DisplayProgressBar("AssetReplace", aPath, aProgress);
+                        var aPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(aPath);
+                        if (aPrefab != null)
+                        {
+                            if (CheckMissingReference(aPrefab))
+                            {
+                                aIsUpdated = true;
+                                EditorUtility.SetDirty(aPrefab);
+                            }
+                        }
+
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError(e);
+                    }
+
+                }
+            }
+            {
+
+                foreach (var aScriptableObjectPath in aScriptableObjectsPath)
+                {
+                    try
+                    {
+                        float aProgress = ++aFinishedCount / (float)aTotalCount;
+                        string aPath = aScriptableObjectPath.Substring(aLen);
+                        UnityEditor.EditorUtility.DisplayProgressBar("AssetReplace", aPath, aProgress);
+                        var aScriptableObject = AssetDatabase.LoadAssetAtPath<ScriptableObject>(aPath);
+                        if (aScriptableObject != null)
+                        {
+                            if (CheckMissingReference(aScriptableObject))
+                            {
+                                m_MissingReferenceList.Add(aScriptableObject);
+                            }
+                        }
+
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError(e);
+                    }
+
+                }
+            }
+            if (aIsUpdated) AssetDatabase.SaveAssets();
+            UnityEditor.EditorUtility.ClearProgressBar();
+            if (m_MissingReferenceList.Count > 0)
+            {
+                Rect buttonRect = new Rect(-200f, 0f, 0f, 0f);
+                PopupWindow.Show(buttonRect, new UCL_MissingReferencePopUpWindow(m_MissingReferenceList.Clone()));
+            }
+
+            //Debug.LogWarning("aFilesPath:" + aFilesPath.UCL_ToString());
+        }
         virtual public void Replace()
         {
+            m_MissingReferenceList.Clear();
             int aTotalCount = 0;
             int aFinishedCount = 0;
             bool aIsUpdated = false;
@@ -299,10 +522,14 @@ namespace UCL.CompilerLib
                         var aScriptableObject = AssetDatabase.LoadAssetAtPath<ScriptableObject>(aPath);
                         if (aScriptableObject != null)
                         {
-                            if (ReplaceOnObject(aScriptableObject) != null)
+                            if (ReplaceOnObject(aScriptableObject, 0) != null)
                             {
                                 aIsUpdated = true;
                                 EditorUtility.SetDirty(aScriptableObject);
+                            }
+                            if (CheckMissingReference(aScriptableObject))
+                            {
+                                m_MissingReferenceList.Add(aScriptableObject);
                             }
                         }
 
@@ -314,10 +541,14 @@ namespace UCL.CompilerLib
 
                 }
             }
-
-
             if (aIsUpdated) AssetDatabase.SaveAssets();
             UnityEditor.EditorUtility.ClearProgressBar();
+            if (m_MissingReferenceList.Count > 0)
+            {
+                Rect buttonRect = new Rect(-200f, 0f, 0f, 0f);
+                PopupWindow.Show(buttonRect, new UCL_MissingReferencePopUpWindow(m_MissingReferenceList.Clone()));
+            }
+
             //Debug.LogWarning("aFilesPath:" + aFilesPath.UCL_ToString());
         }
         virtual public void ReplaceAssets()
@@ -362,6 +593,10 @@ namespace UCL.CompilerLib
             {
                 RevertAssets();
             }
+            if (GUILayout.Button("Find MissingReference", GUILayout.Width(180f)))
+            {
+                FindMissingReference();
+            }
             GUILayout.EndHorizontal();
 
             if (GUILayout.Button("Add New ReplaceData"))
@@ -391,6 +626,8 @@ namespace UCL.CompilerLib
                     }
                 }
                 aReplace.m_OriginPath = GUILayout.TextField(aReplace.m_OriginPath, GUILayout.MinWidth(250));
+                GUILayout.Label("Asset", GUILayout.Width(60)); 
+                aReplace.m_OriginAsset = GUILayout.TextField(aReplace.m_OriginAsset, GUILayout.MinWidth(150));
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("ReplacePath", GUILayout.Width(80));
@@ -405,6 +642,8 @@ namespace UCL.CompilerLib
                     }
                 }
                 aReplace.m_ReplacePath = GUILayout.TextField(aReplace.m_ReplacePath, GUILayout.MinWidth(250));
+                GUILayout.Label("Asset", GUILayout.Width(60));
+                aReplace.m_ReplaceAsset = GUILayout.TextField(aReplace.m_ReplaceAsset, GUILayout.MinWidth(150));
                 GUILayout.EndHorizontal();
                 GUILayout.EndVertical();
                 GUILayout.EndHorizontal();

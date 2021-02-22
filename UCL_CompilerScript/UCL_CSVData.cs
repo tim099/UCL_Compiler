@@ -41,8 +41,8 @@ namespace UCL.CompilerLib {
         {
 
         }
-        public CSVData(string data) {
-            var rows = data.SplitByLine();
+        public CSVData(string iData) {
+            var rows = iData.SplitByLine();
             for(int i = 0; i < rows.Length; i++) {
                 if(!string.IsNullOrEmpty(rows[i])) {
                     m_Rows.Add(new CSVRowData(rows[i]));
@@ -70,13 +70,13 @@ namespace UCL.CompilerLib {
             m_Rows.Add(aRow);
             return aRow;
         }
-        public string GetData(int row, int colume) {
-            if(row < 0 || row >= m_Rows.Count) return string.Empty;
-            return m_Rows[row].Get(colume);
+        public string GetData(int iRow, int iColume) {
+            if(iRow < 0 || iRow >= m_Rows.Count) return string.Empty;
+            return m_Rows[iRow].Get(iColume);
         }
-        public CSVRowData GetRow(int row) {
-            if(row < 0 || row >= m_Rows.Count) return null;
-            return m_Rows[row];
+        public CSVRowData GetRow(int iRow) {
+            if(iRow < 0 || iRow >= m_Rows.Count) return null;
+            return m_Rows[iRow];
         }
         public List<CSVRowData> m_Rows = new List<CSVRowData>();
     }
