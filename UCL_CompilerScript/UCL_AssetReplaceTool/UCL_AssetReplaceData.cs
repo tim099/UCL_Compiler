@@ -61,17 +61,24 @@ namespace UCL.CompilerLib
             {
                 m_ReplacePath = iReplacePath;
             }
-            public void AddReplaceAsset(string iOriginAsset,string iReplaceAsset)
+            public void AddReplaceAsset(string iOriginAsset, string iReplaceAsset, string iReplacePath)
             {
-                if(m_ReplaceDic == null)
+                if (m_ReplaceDic == null)
                 {
                     m_ReplaceDic = new Dictionary<string, string>();
                 }
-                if (m_ReplaceDic.ContainsKey(iOriginAsset))
+                if (!m_ReplaceDic.ContainsKey(iOriginAsset))
                 {
-                    return;
+                    m_ReplaceDic.Add(iOriginAsset, iReplaceAsset);
                 }
-                m_ReplaceDic.Add(iOriginAsset, iReplaceAsset);
+                if (m_PathReplaceDic == null)
+                {
+                    m_PathReplaceDic = new Dictionary<string, string>();
+                }
+                if (!m_PathReplaceDic.ContainsKey(iOriginAsset))
+                {
+                    m_PathReplaceDic.Add(iOriginAsset, iReplacePath);
+                }
             }
             public string GetReplaceAsset(string iOriginAsset)
             {
@@ -86,8 +93,17 @@ namespace UCL.CompilerLib
 
                 return m_ReplaceDic[iOriginAsset];
             }
-            public string m_ReplacePath;
+            public string GetReplacePath(string iOriginAsset)
+            {
+                if (m_PathReplaceDic == null || !m_PathReplaceDic.ContainsKey(iOriginAsset))
+                {
+                    return m_ReplacePath;
+                }
+                return m_PathReplaceDic[iOriginAsset];
+            }
+            string m_ReplacePath;
             Dictionary<string, string> m_ReplaceDic = null;
+            Dictionary<string, string> m_PathReplaceDic = null;
         }
         public List<ReplaceData> m_ReplaceList = new List<ReplaceData>();
         public string m_ReplaceRoot = string.Empty;
@@ -140,8 +156,6 @@ namespace UCL.CompilerLib
                     if (!m_ReplaceDic.ContainsKey(aID))
                     {
                         aReplaceSetting = new ReplaceSetting(aReplace.ReplacePath);
-
-                        //Debug.LogWarning("aID:" + aID);
                         m_ReplaceDic.Add(aID, aReplaceSetting);
                     }
                     else
@@ -151,7 +165,7 @@ namespace UCL.CompilerLib
 
                     if (!string.IsNullOrEmpty(aReplace.m_OriginAsset) && !string.IsNullOrEmpty(aReplace.ReplacePath))
                     {
-                        aReplaceSetting.AddReplaceAsset(aReplace.m_OriginAsset, aReplace.m_ReplaceAsset);
+                        aReplaceSetting.AddReplaceAsset(aReplace.m_OriginAsset, aReplace.m_ReplaceAsset, aReplace.ReplacePath);
                     }
                 }
             }
@@ -164,17 +178,15 @@ namespace UCL.CompilerLib
                     if (!m_ReplaceDic.ContainsKey(aID))
                     {
                         aReplaceSetting = new ReplaceSetting(aReplace.OriginPath);
-
-                        //Debug.LogWarning("aID:" + aID);
                         m_ReplaceDic.Add(aID, aReplaceSetting);
                     }
                     else
                     {
                         aReplaceSetting = m_ReplaceDic[aID];
                     }
-                    if (!string.IsNullOrEmpty(aReplace.m_OriginAsset) && !string.IsNullOrEmpty(aReplace.ReplacePath))
+                    if (!string.IsNullOrEmpty(aReplace.m_OriginAsset) && !string.IsNullOrEmpty(aReplace.OriginPath))
                     {
-                        aReplaceSetting.AddReplaceAsset(aReplace.m_ReplaceAsset, aReplace.m_OriginAsset);
+                        aReplaceSetting.AddReplaceAsset(aReplace.m_ReplaceAsset, aReplace.m_OriginAsset, aReplace.OriginPath);
                     }
                 }
             }
@@ -211,13 +223,13 @@ namespace UCL.CompilerLib
             {
                 if (m_ReplaceDic.ContainsKey(aGUID))
                 {
+                    var aReplaceSetting = m_ReplaceDic[aGUID];
                     if (iData is Sprite)
                     {
                         Sprite aSprite = iData as Sprite;
-                        var aReplaceSetting = m_ReplaceDic[aGUID];
                         string aSpriteName = aReplaceSetting.GetReplaceAsset(aSprite.name);
                         //Debug.LogError("aSprite.name:" + aSprite.name + ",aSpriteName:" + aSpriteName);
-                        Object[] aNewSprites = AssetDatabase.LoadAllAssetsAtPath(aReplaceSetting.m_ReplacePath);
+                        Object[] aNewSprites = AssetDatabase.LoadAllAssetsAtPath(aReplaceSetting.GetReplacePath(aSprite.name));
                         //Debug.LogError("aSprite.name:" + aSprite.name+ ",aNewSprites:"+ aNewSprites.UCL_ToString());
                         if (aNewSprites.Length > 0)
                         {
@@ -241,7 +253,7 @@ namespace UCL.CompilerLib
                     }
                     else
                     {
-                        var aAsset = AssetDatabase.LoadAssetAtPath(m_ReplaceDic[aGUID].m_ReplacePath, iType);
+                        var aAsset = AssetDatabase.LoadAssetAtPath(aReplaceSetting.GetReplacePath(iData.name), iType);
                         return aAsset;
                     }
                 }
@@ -466,8 +478,6 @@ namespace UCL.CompilerLib
                 Rect buttonRect = new Rect(-200f, 0f, 0f, 0f);
                 PopupWindow.Show(buttonRect, new UCL_MissingReferencePopUpWindow(m_MissingReferenceList.Clone()));
             }
-
-            //Debug.LogWarning("aFilesPath:" + aFilesPath.UCL_ToString());
         }
         virtual public void Replace()
         {
@@ -527,10 +537,6 @@ namespace UCL.CompilerLib
                                 aIsUpdated = true;
                                 EditorUtility.SetDirty(aScriptableObject);
                             }
-                            if (CheckMissingReference(aScriptableObject))
-                            {
-                                m_MissingReferenceList.Add(aScriptableObject);
-                            }
                         }
 
                     }
@@ -543,13 +549,6 @@ namespace UCL.CompilerLib
             }
             if (aIsUpdated) AssetDatabase.SaveAssets();
             UnityEditor.EditorUtility.ClearProgressBar();
-            if (m_MissingReferenceList.Count > 0)
-            {
-                Rect buttonRect = new Rect(-200f, 0f, 0f, 0f);
-                PopupWindow.Show(buttonRect, new UCL_MissingReferencePopUpWindow(m_MissingReferenceList.Clone()));
-            }
-
-            //Debug.LogWarning("aFilesPath:" + aFilesPath.UCL_ToString());
         }
         virtual public void ReplaceAssets()
         {

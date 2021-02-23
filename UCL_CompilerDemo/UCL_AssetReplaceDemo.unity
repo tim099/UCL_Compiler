@@ -155,6 +155,8 @@ MonoBehaviour:
     m_ReplaceList:
     - m_OriginPath: UCL/UCL_Modules/UCL_Compiler/UCL_CompilerDemo/UCL_AssetReplaceDemo/ReplaceTest01.png
       m_ReplacePath: UCL/UCL_Modules/UCL_Compiler/UCL_CompilerDemo/UCL_AssetReplaceDemo/ReplaceTest02.png
+      m_OriginAsset: 
+      m_ReplaceAsset: 
     m_ReplaceRoot: UCL/UCL_Modules/UCL_Compiler/UCL_CompilerDemo/UCL_AssetReplaceDemo
 --- !u!4 &524108827
 Transform:
@@ -287,10 +289,16 @@ MonoBehaviour:
     m_ReplaceList:
     - m_OriginPath: UCL/UCL_Modules/UCL_Compiler/UCL_CompilerDemo/UCL_AssetReplaceDemo/ReplaceTest01.png
       m_ReplacePath: UCL/UCL_Modules/UCL_Compiler/UCL_CompilerDemo/UCL_AssetReplaceDemo/ReplaceTest02.png
+      m_OriginAsset: 
+      m_ReplaceAsset: 
     - m_OriginPath: UCL/UCL_Modules/UCL_Compiler/UCL_CompilerDemo/UCL_AssetReplaceDemo/ReplaceTest03.png
       m_ReplacePath: UCL/UCL_Modules/UCL_Compiler/UCL_CompilerDemo/UCL_AssetReplaceDemo/ReplaceTest04.png
+      m_OriginAsset: 
+      m_ReplaceAsset: 
     - m_OriginPath: UCL/UCL_Modules/UCL_Compiler/UCL_CompilerDemo/UCL_AssetReplaceDemo/hammer-sound.wav
       m_ReplacePath: UCL/UCL_Modules/UCL_Compiler/UCL_CompilerDemo/UCL_AssetReplaceDemo/furnace.wav
+      m_OriginAsset: 
+      m_ReplaceAsset: 
     m_ReplaceRoot: UCL/UCL_Modules/UCL_Compiler/UCL_CompilerDemo/UCL_AssetReplaceDemo
 --- !u!4 &1171852952
 Transform:
