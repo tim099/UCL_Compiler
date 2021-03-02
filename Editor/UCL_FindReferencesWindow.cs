@@ -9,7 +9,7 @@ namespace UCL.CompilerLib
 {
     public class UCL_FindReferencesWindow : EditorWindow
     {
-        [MenuItem("Assets/Find References", false, 20)]
+        [MenuItem("UCL/Tools/Find References", false, 20)]
         static public void ShowWindow()
         {
             EditorWindow.GetWindow<UCL_FindReferencesWindow>();
