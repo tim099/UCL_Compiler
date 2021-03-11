@@ -370,6 +370,7 @@ namespace UCL.CompilerLib
                 if (CheckMissingReference(aComponent))
                 {
                     aIsMissingReference = true;
+                    break;
                 }
             }
             if (aIsMissingReference)
@@ -413,7 +414,6 @@ namespace UCL.CompilerLib
             m_MissingReferenceList.Clear();
             int aTotalCount = 0;
             int aFinishedCount = 0;
-            bool aIsUpdated = false;
             int aLen = Application.dataPath.Length - 6;
             var aPrefabsPath = Directory.GetFiles(Path.Combine(Application.dataPath, m_ReplaceRoot), "*.prefab", SearchOption.AllDirectories);
             aTotalCount += aPrefabsPath.Length;
@@ -430,11 +430,7 @@ namespace UCL.CompilerLib
                         var aPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(aPath);
                         if (aPrefab != null)
                         {
-                            if (CheckMissingReference(aPrefab))
-                            {
-                                aIsUpdated = true;
-                                EditorUtility.SetDirty(aPrefab);
-                            }
+                            CheckMissingReference(aPrefab);
                         }
 
                     }
@@ -471,7 +467,6 @@ namespace UCL.CompilerLib
 
                 }
             }
-            if (aIsUpdated) AssetDatabase.SaveAssets();
             UnityEditor.EditorUtility.ClearProgressBar();
             if (m_MissingReferenceList.Count > 0)
             {
@@ -578,6 +573,10 @@ namespace UCL.CompilerLib
                 if (aPath.Length > aLen)
                 {
                     m_ReplaceRoot = aPath.Substring(aLen);
+                }
+                else if (aPath.Length == aLen)
+                {
+                    m_ReplaceRoot = string.Empty;
                 }
                 //m_ReplaceRoot = EditorUtility.OpenFolderPanel("Explore ReplaceRoot", m_ReplaceRoot, string.Empty);
             }
