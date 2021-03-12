@@ -11,17 +11,26 @@ namespace UCL.CompilerLib
 {
     public class UCL_FindReferencesWindow : EditorWindow
     {
+        static UCL_FindReferencesWindow Ins = null;
         const int MaxSearchLayer = 10;
-
+        const string FindReferencesMenuItem = "UCL/Tools/Find References In Project";
         public string m_SearchRoot = string.Empty;
         List<Object> m_ReferencesList = new List<Object>();
         Object m_Target = null;
-        [MenuItem("UCL/Tools/Find References", false, 20)]
-        [MenuItem("Assets/UCL Tools/Find References", false, 20)]
+
+        [MenuItem(FindReferencesMenuItem, false, 20)]
         static public void ShowWindow()
         {
-            var aWindow = EditorWindow.GetWindow<UCL_FindReferencesWindow>();
-            aWindow.Init(Selection.activeObject);
+            //Menu.SetChecked(FindReferencesMenuItem, Ins != null);
+            Ins = EditorWindow.GetWindow<UCL_FindReferencesWindow>();
+            Ins.Init(Selection.activeObject);
+        }
+
+        [MenuItem("Assets/UCL Tools/Find References In Project", false, 20)]
+        static public void ShowWindowAndFindReference()
+        {
+            ShowWindow();
+            Ins.SearchByGUID();
         }
         public void SearchComponentScriptReference(System.Type iComponentType)
         {
@@ -118,7 +127,40 @@ namespace UCL.CompilerLib
         {
 
         }
-        public void Search()
+        public void SearchByGUID()
+        {
+            m_ReferencesList.Clear();
+            var aSerializationMode = EditorSettings.serializationMode;
+            EditorSettings.serializationMode = SerializationMode.ForceText;
+            var aGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(m_Target));
+            Regex aRegex = new Regex(aGUID, RegexOptions.Compiled);
+            List<string> aPaths = new List<string>();
+            aPaths.Append(Directory.GetFiles(Path.Combine(Application.dataPath, m_SearchRoot), "*.prefab", SearchOption.AllDirectories));
+            aPaths.Append(Directory.GetFiles(Path.Combine(Application.dataPath, m_SearchRoot), "*.unity", SearchOption.AllDirectories));
+            aPaths.Append(Directory.GetFiles(Path.Combine(Application.dataPath, m_SearchRoot), "*.mat", SearchOption.AllDirectories));
+            aPaths.Append(Directory.GetFiles(Path.Combine(Application.dataPath, m_SearchRoot), "*.asset", SearchOption.AllDirectories));
+            for(int i = 0; i < aPaths.Count; i++)
+            {
+                float aProgress = (float)i / aPaths.Count;
+                string aPath = aPaths[i];
+                string aStr = File.ReadAllText(aPath);
+                if (aRegex.IsMatch(aStr))
+                {
+                    string aAssetPath = UCL.Core.FileLib.Lib.ConvertToAssetsPath(aPath);
+                    //Debug.LogError("aAssetPath:" + aAssetPath + ",aPath:" + aPath);
+                    m_ReferencesList.Add(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(aAssetPath));
+                }
+                if(UnityEditor.EditorUtility.DisplayCancelableProgressBar("Search:"+ (100f * aProgress).ToString("N2")+"%", aPath, aProgress))
+                {
+                    break;
+                }
+            }
+
+
+            EditorSettings.serializationMode = aSerializationMode;
+            UnityEditor.EditorUtility.ClearProgressBar();
+        }
+        public void SearchByReflection()
         {
             m_ReferencesList.Clear();
             var aType = m_Target.GetType();
@@ -265,7 +307,8 @@ namespace UCL.CompilerLib
         }
         void OnGUI()
         {
-            EditorGUILayout.BeginVertical();
+            GUILayout.BeginVertical();
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("SearchRoot", GUILayout.Width(80));
             m_SearchRoot = GUILayout.TextField(m_SearchRoot);
@@ -281,33 +324,31 @@ namespace UCL.CompilerLib
                 {
                     m_SearchRoot = string.Empty;
                 }
-                //m_ReplaceRoot = EditorUtility.OpenFolderPanel("Explore ReplaceRoot", m_ReplaceRoot, string.Empty);
             }
-            EditorGUILayout.EndHorizontal();
+            GUILayout.EndHorizontal();
 
-            EditorGUILayout.BeginHorizontal();
-
-
+            GUILayout.BeginHorizontal();
+            bool aDoSearch = false;
             m_Target = EditorGUILayout.ObjectField("Target Object:", m_Target, typeof(Object), true);
             if (m_Target != null)
             {
                 if (GUILayout.Button("Search",GUILayout.Width(80)))
                 {
-                    Search();
+                    aDoSearch = true;
+                    //SearchByReflection();
                 }
             }
-
-            EditorGUILayout.EndHorizontal();
+            GUILayout.EndHorizontal();
 
             if (m_ReferencesList.Count > 0)
             {
-                EditorGUILayout.BeginHorizontal();
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("Reference result");
                 if (GUILayout.Button("Clear", GUILayout.Width(120f)))
                 {
                     m_ReferencesList.Clear();
                 }
-                EditorGUILayout.EndHorizontal();
+                GUILayout.EndHorizontal();
                 for (int i = 0; i < m_ReferencesList.Count; i++)
                 {
                     var aObj = m_ReferencesList[i];
@@ -316,8 +357,12 @@ namespace UCL.CompilerLib
             }
 
 
-            EditorGUILayout.EndVertical();
+            GUILayout.EndVertical();
             if (Event.current.type == EventType.Repaint) Repaint();
+            if (aDoSearch)
+            {
+                SearchByGUID();
+            }
         }
     }
 }

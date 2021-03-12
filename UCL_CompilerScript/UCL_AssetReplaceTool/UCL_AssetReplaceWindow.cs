@@ -15,7 +15,7 @@ namespace UCL.CompilerLib
         protected Vector2 m_ScrollPos = default;
         protected string m_CSVPath;
 
-        [MenuItem("UCL/AssetReplaceWindow")]
+        [MenuItem("UCL/Tools/AssetReplaceWindow")]
         public static void ShowWindow()
         {
             Instance = EditorWindow.GetWindow<UCL_AssetReplaceWindow>("AssetReplaceWindow");
