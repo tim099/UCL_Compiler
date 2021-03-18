@@ -46,6 +46,7 @@ namespace UCL.CompilerLib {
             foreach(var aFilePath in aFilePaths) {
                 float aProgress = ++aFinishedCount / (float)aTotalCount;
                 var aFileName = UCL.Core.FileLib.Lib.GetFileName(aFilePath);
+                //var aFoldersName = UCL.Core.FileLib.Lib.GetFoldersName(aFilePath);
                 if(aExcludeFileSet.Contains(aFileName)) {
                     continue;//Skip this file
                 }
@@ -71,7 +72,7 @@ namespace UCL.CompilerLib {
         }
 #if UNITY_EDITOR
         /// <summary>
-        /// Explore SourceDirectory
+        /// Explore Refactor root folder
         /// </summary>
         [UCL.Core.ATTR.UCL_FunctionButton]
         public void ExploreRefactorRoot() {
@@ -79,9 +80,9 @@ namespace UCL.CompilerLib {
                 var path = UnityEditor.AssetDatabase.GetAssetPath(this);
                 m_RefactorRoot = Core.FileLib.Lib.RemoveFolderPath(path, 1);
             }
-            var dir = Core.FileLib.EditorLib.OpenAssetsFolderExplorer(m_RefactorRoot);
-            if(!string.IsNullOrEmpty(dir)) {
-                m_RefactorRoot = dir;
+            var aDir = Core.FileLib.EditorLib.OpenFolderExplorer(m_RefactorRoot);
+            if(!string.IsNullOrEmpty(aDir)) {
+                m_RefactorRoot = aDir;
             }
         }
 #endif
