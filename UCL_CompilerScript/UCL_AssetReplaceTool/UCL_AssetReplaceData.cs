@@ -569,7 +569,7 @@ namespace UCL.CompilerLib
             {
                 int aLen = Application.dataPath.Length + 1;
                 var aPath = Path.Combine(Application.dataPath, m_ReplaceRoot);
-                aPath = EditorUtility.OpenFolderPanel("Explore ReplaceRoot", aPath, string.Empty);
+                aPath = UCL.Core.EditorLib.EditorUtilityMapper.OpenFolderPanel("Explore ReplaceRoot", aPath, string.Empty);
                 if (aPath.Length > aLen)
                 {
                     m_ReplaceRoot = aPath.Substring(aLen);
@@ -617,7 +617,7 @@ namespace UCL.CompilerLib
                 {
                     int aLen = Application.dataPath.Length + 1;
                     var aPath = Path.Combine(Application.dataPath, aReplace.m_OriginPath);
-                    aPath = EditorUtility.OpenFilePanel("Explore", aPath, string.Empty);
+                    aPath = UCL.Core.EditorLib.EditorUtilityMapper.OpenFilePanel("Explore", aPath, string.Empty);
                     if(aPath.Length > aLen)
                     {
                         aReplace.m_OriginPath = aPath.Substring(aLen);
@@ -633,7 +633,7 @@ namespace UCL.CompilerLib
                 {
                     int aLen = Application.dataPath.Length + 1;
                     var aPath = Path.Combine(Application.dataPath, aReplace.m_ReplacePath);
-                    aPath = EditorUtility.OpenFilePanel("Explore", aPath, string.Empty);
+                    aPath = UCL.Core.EditorLib.EditorUtilityMapper.OpenFilePanel("Explore", aPath, string.Empty);
                     if (aPath.Length > aLen)
                     {
                         aReplace.m_ReplacePath = aPath.Substring(aLen);

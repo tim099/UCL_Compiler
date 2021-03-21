@@ -67,7 +67,7 @@ namespace UCL.CompilerLib
                     {
                         m_CSVPath = Application.dataPath.Replace("Assets", string.Empty);
                     }
-                    m_CSVPath = EditorUtility.OpenFilePanel("Explore CSV", m_CSVPath, "csv");
+                    m_CSVPath = UCL.Core.EditorLib.EditorUtilityMapper.OpenFilePanel("Explore CSV", m_CSVPath, "csv");
                     m_AssetReplaceData.LoadReplaceDataFromCSV(m_CSVPath);
                 }
                 if (GUILayout.Button("Reload CSV", GUILayout.Width(120f)))

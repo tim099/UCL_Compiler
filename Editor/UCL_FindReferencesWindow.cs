@@ -23,7 +23,7 @@ namespace UCL.CompilerLib
         {
             //Menu.SetChecked(FindReferencesMenuItem, Ins != null);
             Ins = EditorWindow.GetWindow<UCL_FindReferencesWindow>();
-            Ins.Init(Selection.activeObject);
+            Ins.Init(UCL.Core.EditorLib.SelectionMapper.activeObject);
         }
 
         [MenuItem("Assets/UCL Tools/Find References In Project", false, 20)]
@@ -316,7 +316,7 @@ namespace UCL.CompilerLib
             {
                 int aLen = Application.dataPath.Length + 1;
                 var aPath = Path.Combine(Application.dataPath, m_SearchRoot);
-                aPath = EditorUtility.OpenFolderPanel("Explore SearchRoot", aPath, string.Empty);
+                aPath = UCL.Core.EditorLib.EditorUtilityMapper.OpenFolderPanel("Explore SearchRoot", aPath, string.Empty);
                 if (aPath.Length > aLen)
                 {
                     m_SearchRoot = aPath.Substring(aLen);
