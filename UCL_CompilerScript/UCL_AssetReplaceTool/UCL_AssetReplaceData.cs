@@ -501,7 +501,7 @@ namespace UCL.CompilerLib
                             {
                                 aIsUpdated = true;
                                 //Debug.LogWarning("Save Prefab!!");
-                                EditorUtility.SetDirty(aPrefab);
+                                UCL.Core.EditorLib.EditorUtilityMapper.SetDirty(aPrefab);
                             }
 
                             //Debug.LogWarning("aComponents:" + aComponents.UCL_ToString());
@@ -530,7 +530,7 @@ namespace UCL.CompilerLib
                             if (ReplaceOnObject(aScriptableObject, 0) != null)
                             {
                                 aIsUpdated = true;
-                                EditorUtility.SetDirty(aScriptableObject);
+                                UCL.Core.EditorLib.EditorUtilityMapper.SetDirty(aScriptableObject);
                             }
                         }
 
