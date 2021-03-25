@@ -4,10 +4,10 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: 4038306686414446762
-    second: Face1
+    second: Face
   - first:
       213: 3133035367992802792
-    second: Body2
+    second: Body
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -117,7 +117,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Face1
+      name: Face
       rect:
         serializedVersion: 2
         x: 174
@@ -138,7 +138,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Body2
+      name: Body
       rect:
         serializedVersion: 2
         x: 152

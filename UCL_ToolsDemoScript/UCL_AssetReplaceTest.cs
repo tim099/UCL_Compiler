@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace UCL.CompilerLib.Demo
+namespace UCL.ToolsLib.Demo
 {
     [UCL.Core.ATTR.EnableUCLEditor]
     public class UCL_AssetReplaceTest : MonoBehaviour

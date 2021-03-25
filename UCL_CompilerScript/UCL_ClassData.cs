@@ -60,7 +60,7 @@ namespace UCL.CompilerLib {
         public HashSet<string> m_Summarys = new HashSet<string>();
         public object m_Value = null;
         public ClassFieldData() { }
-        public ClassFieldData(CSVRowData iColumeData) {
+        public ClassFieldData(UCL.Core.CsvLib.CSVRowData iColumeData) {
             Init(iColumeData.m_Columes);
         }
         public ClassFieldData(string iName) {
@@ -231,7 +231,7 @@ namespace UCL.CompilerLib {
         public void SetReturnType(string iReturnType) {
             m_ReturnType = iReturnType;
         }
-        public void ParseMethodData(int at, CSVRowData iColumeData) {
+        public void ParseMethodData(int at, UCL.Core.CsvLib.CSVRowData iColumeData) {
             string aTitle = iColumeData.Get(at++);
             switch(aTitle.ToLower()) {
                 case "accessmodifier": {
@@ -305,7 +305,7 @@ namespace UCL.CompilerLib {
         public string m_ClassName = string.Empty;
 
         public ClassData() { }
-        public ClassData(CSVData csv_data) {
+        public ClassData(UCL.Core.CsvLib.CSVData csv_data) {
             for(int i = 0, count = csv_data.Count; i < count; i++) {
                 ParseCSVColume(csv_data.GetRow(i));
             }
@@ -388,7 +388,7 @@ namespace UCL.CompilerLib {
             return aStringBuilder.ToString();
         }
         #endregion
-        virtual public void ParseCSVColume(CSVRowData iColumeData) {
+        virtual public void ParseCSVColume(UCL.Core.CsvLib.CSVRowData iColumeData) {
             if(iColumeData.Count == 0) return;
             string title = iColumeData.Get(0).ToLower();
             switch(title) {

@@ -7,9 +7,9 @@ namespace UCL.CompilerLib.Test {
     public class UCL_ClassAutoGenTest : MonoBehaviour {
         public string m_FolderPath = string.Empty;
         public string m_NameSpace = string.Empty;
-        public UCL_CSVParser m_ClassParser = null;
-        public UCL_CSVParser m_DataParser = null;
-        public UCL_CSVParser m_EventNameParser = null;
+        public UCL.Core.CsvLib.UCL_CSVParser m_ClassParser = null;
+        public UCL.Core.CsvLib.UCL_CSVParser m_DataParser = null;
+        public UCL.Core.CsvLib.UCL_CSVParser m_EventNameParser = null;
         public UCL_ScriptRefactor m_ScriptRefactor = null;
         [UCL.Core.ATTR.UCL_FunctionButton]
         public void Generate() {

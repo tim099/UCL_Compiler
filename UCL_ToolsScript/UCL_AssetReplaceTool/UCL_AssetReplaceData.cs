@@ -4,11 +4,12 @@ using UnityEngine;
 
 using System.IO;
 using System.Reflection;
+using UCL.Core.CsvLib;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-namespace UCL.CompilerLib
+namespace UCL.ToolsLib
 {
     [System.Serializable]
     public class AssetReplaceData

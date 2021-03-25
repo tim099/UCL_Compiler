@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace UCL.CompilerLib
+namespace UCL.ToolsLib
 {
     public class UCL_AssetReplaceWindow : EditorWindow
     {

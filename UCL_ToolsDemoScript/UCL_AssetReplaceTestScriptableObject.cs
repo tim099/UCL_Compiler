@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace UCL.CompilerLib.Demo
+namespace UCL.ToolsLib.Demo
 {
     [CreateAssetMenu(fileName = "New AssetReplaceTest", menuName = "UCL_Demo/AssetReplaceTest")]
     public class UCL_AssetReplaceTestScriptableObject : ScriptableObject

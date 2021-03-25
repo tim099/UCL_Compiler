@@ -6,7 +6,7 @@ using UnityEngine;
 
 using UnityEditor;
 
-namespace UCL.CompilerLib
+namespace UCL.ToolsLib
 {
     public class UCL_MissingReferencePopUpWindow : PopupWindowContent
     {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using UCL.Core.CsvLib;
 
 namespace UCL.CompilerLib.Test {
     [UCL.Core.ATTR.EnableUCLEditor]
